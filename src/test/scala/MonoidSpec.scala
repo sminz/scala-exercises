@@ -11,7 +11,7 @@ class MonoidSpec extends WordSpec with Matchers {
       import cats._
       import cats.std.all._
       import cats.syntax.all._
-      
+
       Monoid[String].empty shouldBe ""
       Monoid[String].combineAll(List("a", "b", "c")) shouldBe "abc"
       Monoid[String].combineAll(List()) shouldBe ""
@@ -23,18 +23,25 @@ class MonoidSpec extends WordSpec with Matchers {
       l.foldMap(identity) shouldBe 15
       l.foldMap(i => i.toString) shouldBe "12345"
 
-      implicit def monoidTuple[A: Monoid, B: Monoid]: Monoid[(A, B)] =
-        new Monoid[(A, B)] {
-          def combine(x: (A, B), y: (A, B)): (A, B) = {
-            val (xa, xb) = x
-            val (ya, yb) = y
-            (Monoid[A].combine(xa, ya), Monoid[B].combine(xb, yb))
-          }
-          def empty: (A, B) = (Monoid[A].empty, Monoid[B].empty)
+      val ll = List(1, 2, 3, 4, 5)
+      ll.foldMap(j => (j, j.toString)) shouldBe(15, "12345")
+    }
+
+    "produce a tuple" in {
+      import cats._
+      import cats.implicits._
+
+      implicit def monoidTuple[A: Monoid, B: Monoid]: Monoid[(A, B)] = new Monoid[(A, B)] {
+        def combine(x: (A, B), y: (A, B)): (A, B) = {
+          val (xa, xb) = x
+          val (ya, yb) = y
+          (Monoid[A].combine(xa, ya), Monoid[B].combine(xb, yb))
         }
 
-      val ll = List(1, 2, 3, 4, 5)
-      ll.foldMap(i ⇒ (i, i.toString)) shouldBe (15, "12345")
+        def empty: (A, B) = (Monoid[A].empty, Monoid[B].empty)
+      }
+
+      Monoid[(Int, Int)].combine((1, 2), (3, 4)) shouldBe (4, 6)
     }
   }
 }
